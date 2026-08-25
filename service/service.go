@@ -9,6 +9,14 @@ import (
 	"time"
 )
 
+var (
+	ErrInvalidID       = errors.New("invalid id")
+	ErrTitleRequired   = errors.New("title is required")
+	ErrContentRequired = errors.New("content is required")
+	ErrTitleTooLong    = errors.New("title must be less than 100 characters")
+	ErrNoteRequired    = errors.New("note is required")
+)
+
 type NoteService struct {
 	repo repository.NoteRepo
 }
@@ -19,10 +27,10 @@ func NewNoteService(repo repository.NoteRepo) *NoteService {
 
 func (s *NoteService) CreateNote(ctx context.Context, title, content string) (*entity.Note, error) {
 	if strings.TrimSpace(title) == "" {
-		return nil, errors.New("title is required")
+		return nil, ErrTitleRequired
 	}
 	if strings.TrimSpace(content) == "" {
-		return nil, errors.New("content is required")
+		return nil, ErrContentRequired
 	}
 	var note entity.Note
 	note.Title = title
@@ -39,7 +47,7 @@ func (s *NoteService) CreateNote(ctx context.Context, title, content string) (*e
 func (s *NoteService) GetByID(ctx context.Context, id int) (*entity.Note, error) {
 
 	if id <= 0 {
-		return nil, errors.New("id number is required")
+		return nil, ErrInvalidID
 	}
 	note, err := s.repo.GetByID(ctx, id)
 	if err != nil {
@@ -59,7 +67,7 @@ func (s *NoteService) GetAll(ctx context.Context) ([]entity.Note, error) {
 
 func (s *NoteService) DeleteByID(ctx context.Context, id int) error {
 	if id <= 0 {
-		return errors.New("id number is required")
+		return ErrInvalidID
 	}
 	err := s.repo.DeleteByID(ctx, id)
 	if err != nil {
@@ -69,19 +77,19 @@ func (s *NoteService) DeleteByID(ctx context.Context, id int) error {
 }
 func (s *NoteService) Update(ctx context.Context, note *entity.Note) error {
 	if note == nil {
-		return errors.New("note is required")
+		return ErrNoteRequired
 	}
 	if note.ID <= 0 {
-		return errors.New("id number is required")
+		return ErrInvalidID
 	}
 	if strings.TrimSpace(note.Title) == "" {
-		return errors.New("title is required")
+		return ErrTitleRequired
 	}
 	if strings.TrimSpace(note.Content) == "" {
-		return errors.New("content is required")
+		return ErrContentRequired
 	}
 	if len(note.Title) > 100 {
-		return errors.New("title must be less than 100 characters")
+		return ErrTitleTooLong
 	}
 	return s.repo.Update(ctx, note)
 

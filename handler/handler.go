@@ -2,8 +2,10 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"note-api/entity"
+	"note-api/repository"
 	"note-api/service"
 	"strconv"
 )
@@ -20,10 +22,6 @@ type CreateNoteRequest struct {
 	Title   string `json:"title"`
 	Content string `json:"content"`
 }
-type GetByIDRequest struct {
-	ID int `json:"id"`
-	CreateNoteRequest
-}
 
 func (h *NoteHandler) Create(w http.ResponseWriter, r *http.Request) {
 	var req CreateNoteRequest
@@ -35,7 +33,15 @@ func (h *NoteHandler) Create(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	note, err := h.service.CreateNote(ctx, req.Title, req.Content)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		if errors.Is(err, service.ErrContentRequired) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		if errors.Is(err, service.ErrTitleRequired) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -54,7 +60,16 @@ func (h *NoteHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	note, err := h.service.GetByID(ctx, id)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		if errors.Is(err, service.ErrInvalidID) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		if errors.Is(err, repository.ErrNoteNotFound) {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -66,7 +81,7 @@ func (h *NoteHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	notes, err := h.service.GetAll(ctx)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -84,7 +99,16 @@ func (h *NoteHandler) DeleteByID(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	err = h.service.DeleteByID(ctx, id)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		if errors.Is(err, service.ErrInvalidID) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		if errors.Is(err, repository.ErrNoteNotFound) {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 
@@ -110,8 +134,30 @@ func (h *NoteHandler) Update(w http.ResponseWriter, r *http.Request) {
 
 	err = h.service.Update(ctx, &note)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+
+		if errors.Is(err, service.ErrInvalidID) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		if errors.Is(err, service.ErrTitleRequired) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		if errors.Is(err, service.ErrContentRequired) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		if errors.Is(err, service.ErrTitleTooLong) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		if errors.Is(err, repository.ErrNoteNotFound) {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
+
 	}
 	w.WriteHeader(http.StatusNoContent)
 
