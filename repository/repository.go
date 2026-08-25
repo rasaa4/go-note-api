@@ -13,6 +13,8 @@ type NoteRepo interface {
 	Create(ctx context.Context, note *entity.Note) error
 	GetByID(ctx context.Context, id int) (*entity.Note, error)
 	GetAll(ctx context.Context) ([]entity.Note, error)
+	DeleteByID(ctx context.Context, id int) error
+	Update(ctx context.Context, note *entity.Note) error
 }
 
 type mysqlNoteRepository struct {
@@ -75,4 +77,37 @@ func (r *mysqlNoteRepository) GetAll(ctx context.Context) ([]entity.Note, error)
 		notes = append(notes, note)
 	}
 	return notes, nil
+}
+func (r *mysqlNoteRepository) DeleteByID(ctx context.Context, id int) error {
+
+	query := "DELETE FROM notes WHERE id = ?"
+	result, err := r.db.ExecContext(ctx, query, id)
+	if err != nil {
+		return err
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return ErrNoteNotFound
+	}
+	return nil
+
+}
+
+func (r *mysqlNoteRepository) Update(ctx context.Context, note *entity.Note) error {
+	query := "UPDATE notes SET title = ?, content = ? WHERE id = ?"
+	result, err := r.db.ExecContext(ctx, query, note.Title, note.Content, note.ID)
+	if err != nil {
+		return err
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return ErrNoteNotFound
+	}
+	return nil
 }
