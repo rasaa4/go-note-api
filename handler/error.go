@@ -22,7 +22,9 @@ func writeError(w http.ResponseWriter, status int, err error) {
 
 func handleError(w http.ResponseWriter, err error) {
 	switch {
-	case errors.Is(err, service.ErrInvalidID),
+	case errors.Is(err, service.ErrInvalidPage),
+		errors.Is(err, service.ErrInvalidLimit),
+		errors.Is(err, service.ErrInvalidID),
 		errors.Is(err, service.ErrTitleRequired),
 		errors.Is(err, service.ErrContentRequired),
 		errors.Is(err, service.ErrTitleTooLong),

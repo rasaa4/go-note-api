@@ -10,6 +10,8 @@ import (
 
 type mockNoteRepo struct {
 	createErr error
+	gotPage   int
+	gotLimit  int
 }
 
 func (m *mockNoteRepo) Create(ctx context.Context, note *entity.Note) error {
@@ -30,6 +32,8 @@ func (m *mockNoteRepo) GetByID(ctx context.Context, id int) (*entity.Note, error
 }
 
 func (m *mockNoteRepo) GetAll(ctx context.Context, page, limit int) ([]entity.Note, error) {
+	m.gotPage = page
+	m.gotLimit = limit
 	return []entity.Note{
 		{
 			ID:      1,
@@ -260,5 +264,50 @@ func TestUpdate_Titletoolong(t *testing.T) {
 	err := service.Update(context.Background(), &note)
 	if !errors.Is(err, ErrTitleTooLong) {
 		t.Fatalf("expected ErrTitleTooLong, got %v", err)
+	}
+}
+
+func TestGetAll_InvalidPage(t *testing.T) {
+	repo := &mockNoteRepo{}
+	service := NewNoteService(repo)
+	notes, err := service.GetAll(context.Background(), 0, 10)
+	if !errors.Is(err, ErrInvalidPage) {
+		t.Fatalf("expected ErrInvalidPage, got %v", err)
+	}
+	if notes != nil {
+		t.Fatalf("expected nil notes, got %v+", notes)
+	}
+
+}
+
+func TestGetAll_InvalidLimit(t *testing.T) {
+
+	repo := &mockNoteRepo{}
+	service := NewNoteService(repo)
+	notes, err := service.GetAll(context.Background(), 1, 0)
+	if !errors.Is(err, ErrInvalidLimit) {
+		t.Fatalf("expected ErrInvalidlimit, got %v", err)
+	}
+	if notes != nil {
+		t.Fatalf("expected nil notes, got %v+", notes)
+	}
+}
+
+func TestGetAll_ReturnsNotes(t *testing.T) {
+	repo := &mockNoteRepo{}
+	service := NewNoteService(repo)
+	notes, err := service.GetAll(context.Background(), 2, 10)
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v+", err)
+	}
+	if notes == nil {
+		t.Fatalf("expected notes, got nil")
+	}
+	if repo.gotPage != 2 {
+		t.Errorf("expected page 2, got %d", repo.gotPage)
+	}
+	if repo.gotLimit != 10 {
+		t.Errorf("expected limit 10, got %d", repo.gotLimit)
 	}
 }
