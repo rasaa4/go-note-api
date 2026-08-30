@@ -61,18 +61,33 @@ func (h *NoteHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(note)
 
 }
+
 func (h *NoteHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	notes, err := h.service.GetAll(ctx)
+
+	pageStr := r.URL.Query().Get("page")
+	page, err := strconv.Atoi(pageStr)
+	if err != nil {
+		http.Error(w, "invalid page", http.StatusBadRequest)
+		return
+	}
+
+	limitStr := r.URL.Query().Get("limit")
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil {
+		http.Error(w, "invalid limit", http.StatusBadRequest)
+		return
+	}
+
+	notes, err := h.service.GetAll(ctx, page, limit)
 	if err != nil {
 		handleError(w, err)
 		return
-
 	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(notes)
-
 }
 func (h *NoteHandler) DeleteByID(w http.ResponseWriter, r *http.Request) {
 	idStr := r.URL.Query().Get("id")

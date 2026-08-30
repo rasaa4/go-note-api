@@ -29,7 +29,7 @@ func (m *mockNoteRepo) GetByID(ctx context.Context, id int) (*entity.Note, error
 	}, nil
 }
 
-func (m *mockNoteRepo) GetAll(ctx context.Context) ([]entity.Note, error) {
+func (m *mockNoteRepo) GetAll(ctx context.Context, page, limit int) ([]entity.Note, error) {
 	return []entity.Note{
 		{
 			ID:      1,
@@ -140,7 +140,7 @@ func TestGetByID_InvalidID(t *testing.T) {
 func TestGetAll(t *testing.T) {
 	repo := &mockNoteRepo{}
 	service := NewNoteService(repo)
-	notes, err := service.GetAll(context.Background())
+	notes, err := service.GetAll(context.Background(), 1, 10)
 	if err != nil {
 		t.Fatalf("expecteed no error, got %v", err)
 	}

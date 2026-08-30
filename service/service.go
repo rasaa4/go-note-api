@@ -15,6 +15,8 @@ var (
 	ErrContentRequired = errors.New("content is required")
 	ErrTitleTooLong    = errors.New("title must be less than 100 characters")
 	ErrNoteRequired    = errors.New("note is required")
+	ErrInvalidPage     = errors.New("invalid page")
+	ErrInvalidLimit    = errors.New("invalid limit")
 )
 
 type NoteService struct {
@@ -56,9 +58,14 @@ func (s *NoteService) GetByID(ctx context.Context, id int) (*entity.Note, error)
 	return note, nil
 
 }
-
-func (s *NoteService) GetAll(ctx context.Context) ([]entity.Note, error) {
-	notes, err := s.repo.GetAll(ctx)
+func (s *NoteService) GetAll(ctx context.Context, page, limit int) ([]entity.Note, error) {
+	if page <= 0 {
+		return nil, ErrInvalidPage
+	}
+	if limit <= 0 {
+		return nil, ErrInvalidLimit
+	}
+	notes, err := s.repo.GetAll(ctx, page, limit)
 	if err != nil {
 		return nil, err
 	}

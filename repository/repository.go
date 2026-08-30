@@ -12,7 +12,7 @@ var ErrNoteNotFound = errors.New("note not found")
 type NoteRepo interface {
 	Create(ctx context.Context, note *entity.Note) error
 	GetByID(ctx context.Context, id int) (*entity.Note, error)
-	GetAll(ctx context.Context) ([]entity.Note, error)
+	GetAll(ctx context.Context, page, limit int) ([]entity.Note, error)
 	DeleteByID(ctx context.Context, id int) error
 	Update(ctx context.Context, note *entity.Note) error
 }
@@ -59,9 +59,12 @@ func (r *mysqlNoteRepository) GetByID(ctx context.Context, id int) (*entity.Note
 	return &note, nil
 }
 
-func (r *mysqlNoteRepository) GetAll(ctx context.Context) ([]entity.Note, error) {
-	query := "SELECT id, title, content, created_at FROM notes"
-	rows, err := r.db.QueryContext(ctx, query)
+func (r *mysqlNoteRepository) GetAll(ctx context.Context, page, limit int) ([]entity.Note, error) {
+
+	offset := (page - 1) * limit
+	query := `SELECT id, title, content, created_at FROM notes
+	LIMIT ? OFFSET ?`
+	rows, err := r.db.QueryContext(ctx, query, limit, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +77,11 @@ func (r *mysqlNoteRepository) GetAll(ctx context.Context) ([]entity.Note, error)
 		if err != nil {
 			return nil, err
 		}
+
 		notes = append(notes, note)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return notes, nil
 }
