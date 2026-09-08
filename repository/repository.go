@@ -60,10 +60,15 @@ func (r *mysqlNoteRepository) GetByID(ctx context.Context, id int) (*entity.Note
 }
 
 func (r *mysqlNoteRepository) GetAll(ctx context.Context, page, limit int) ([]entity.Note, error) {
-
 	offset := (page - 1) * limit
-	query := `SELECT id, title, content, created_at FROM notes
-	LIMIT ? OFFSET ?`
+
+	query := `
+		SELECT id, title, content, created_at
+		FROM notes
+		ORDER BY id DESC
+		LIMIT ? OFFSET ?
+	`
+
 	rows, err := r.db.QueryContext(ctx, query, limit, offset)
 	if err != nil {
 		return nil, err
@@ -73,7 +78,12 @@ func (r *mysqlNoteRepository) GetAll(ctx context.Context, page, limit int) ([]en
 	var notes []entity.Note
 	for rows.Next() {
 		var note entity.Note
-		err := rows.Scan(&note.ID, &note.Title, &note.Content, &note.CreatedAt)
+		err := rows.Scan(
+			&note.ID,
+			&note.Title,
+			&note.Content,
+			&note.CreatedAt,
+		)
 		if err != nil {
 			return nil, err
 		}
@@ -83,6 +93,7 @@ func (r *mysqlNoteRepository) GetAll(ctx context.Context, page, limit int) ([]en
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
+
 	return notes, nil
 }
 func (r *mysqlNoteRepository) DeleteByID(ctx context.Context, id int) error {
