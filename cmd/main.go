@@ -45,7 +45,12 @@ func main() {
 	noteService := service.NewNoteService(noteRepo)
 	noteHandler := handler.NewNoteHandler(noteService)
 
+	userRepo := repository.NewmysqlUserRepo(db)
+	userService := service.NewUserService(userRepo)
+	authHandler := handler.NewAuthHandler(userService)
+
 	mux := http.NewServeMux()
+
 	mux.HandleFunc("/notes", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPost:
@@ -78,8 +83,24 @@ func main() {
 		noteHandler.DeleteByID(w, r)
 	})
 
-	log.Println("server starting on :8080")
+	mux.HandleFunc("/register", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "method is not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		authHandler.Register(w, r)
 
+	})
+	mux.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "method is not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		authHandler.Login(w, r)
+
+	})
+
+	log.Println("server starting on :8080")
 	handler := handler.EnableCORS(mux)
 
 	if err := http.ListenAndServe(":8080", handler); err != nil {

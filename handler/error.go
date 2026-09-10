@@ -34,6 +34,8 @@ func handleError(w http.ResponseWriter, err error) {
 
 	case errors.Is(err, repository.ErrNoteNotFound):
 		writeError(w, http.StatusNotFound, err)
+	case errors.Is(err, service.ErrInvalidCredentials):
+		writeError(w, http.StatusUnauthorized, err)
 
 	default:
 		writeError(
