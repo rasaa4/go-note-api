@@ -15,8 +15,9 @@ authentication, layered architecture, and a React/TypeScript frontend.
 
 ## Tech Stack
 
-**Backend:** Go, MySQL, JWT, bcrypt, Docker
-**Frontend:** React, TypeScript, Vite, Tailwind CSS
+**Backend:** Go, MySQL, JWT, bcrypt, Docker — hand-written
+**Frontend:** React, TypeScript, Vite, Tailwind CSS — built with an AI
+coding agent as a lightweight client for the API
 
 ## Getting Started
 
