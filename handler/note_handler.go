@@ -71,6 +71,13 @@ func (h *NoteHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 
 func (h *NoteHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+
+	userID, ok := ctx.Value("userID").(int)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	page := 1
 	limit := 10
 	var err error
@@ -92,10 +99,13 @@ func (h *NoteHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	notes, err := h.service.GetAll(ctx, page, limit)
+	notes, err := h.service.GetAll(ctx, userID, page, limit)
 	if err != nil {
 		handleError(w, err)
 		return
+	}
+	if notes == nil {
+		notes = []entity.Note{}
 	}
 
 	w.Header().Set("Content-Type", "application/json")

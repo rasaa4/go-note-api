@@ -59,14 +59,14 @@ func (s *NoteService) GetByID(ctx context.Context, id int) (*entity.Note, error)
 	return note, nil
 
 }
-func (s *NoteService) GetAll(ctx context.Context, page, limit int) ([]entity.Note, error) {
+func (s *NoteService) GetAll(ctx context.Context, userID int, page, limit int) ([]entity.Note, error) {
 	if page <= 0 {
 		return nil, ErrInvalidPage
 	}
 	if limit <= 0 {
 		return nil, ErrInvalidLimit
 	}
-	notes, err := s.repo.GetAll(ctx, page, limit)
+	notes, err := s.repo.GetAll(ctx, userID, page, limit)
 	if err != nil {
 		return nil, err
 	}

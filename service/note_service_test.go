@@ -10,6 +10,7 @@ import (
 
 type mockNoteRepo struct {
 	createErr error
+	gotUserID int
 	gotPage   int
 	gotLimit  int
 }
@@ -31,7 +32,8 @@ func (m *mockNoteRepo) GetByID(ctx context.Context, id int) (*entity.Note, error
 	}, nil
 }
 
-func (m *mockNoteRepo) GetAll(ctx context.Context, page, limit int) ([]entity.Note, error) {
+func (m *mockNoteRepo) GetAll(ctx context.Context, userID, page, limit int) ([]entity.Note, error) {
+	m.gotUserID = userID
 	m.gotPage = page
 	m.gotLimit = limit
 	return []entity.Note{
@@ -147,7 +149,7 @@ func TestGetByID_InvalidID(t *testing.T) {
 func TestGetAll(t *testing.T) {
 	repo := &mockNoteRepo{}
 	service := NewNoteService(repo)
-	notes, err := service.GetAll(context.Background(), 1, 10)
+	notes, err := service.GetAll(context.Background(), 1, 1, 10)
 	if err != nil {
 		t.Fatalf("expecteed no error, got %v", err)
 	}
@@ -273,7 +275,7 @@ func TestUpdate_Titletoolong(t *testing.T) {
 func TestGetAll_InvalidPage(t *testing.T) {
 	repo := &mockNoteRepo{}
 	service := NewNoteService(repo)
-	notes, err := service.GetAll(context.Background(), 0, 10)
+	notes, err := service.GetAll(context.Background(), 1, 0, 10)
 	if !errors.Is(err, ErrInvalidPage) {
 		t.Fatalf("expected ErrInvalidPage, got %v", err)
 	}
@@ -287,7 +289,7 @@ func TestGetAll_InvalidLimit(t *testing.T) {
 
 	repo := &mockNoteRepo{}
 	service := NewNoteService(repo)
-	notes, err := service.GetAll(context.Background(), 1, 0)
+	notes, err := service.GetAll(context.Background(), 1, 1, 0)
 	if !errors.Is(err, ErrInvalidLimit) {
 		t.Fatalf("expected ErrInvalidlimit, got %v", err)
 	}
@@ -299,13 +301,16 @@ func TestGetAll_InvalidLimit(t *testing.T) {
 func TestGetAll_ReturnsNotes(t *testing.T) {
 	repo := &mockNoteRepo{}
 	service := NewNoteService(repo)
-	notes, err := service.GetAll(context.Background(), 2, 10)
+	notes, err := service.GetAll(context.Background(), 7, 2, 10)
 
 	if err != nil {
 		t.Fatalf("expected no error, got %v+", err)
 	}
 	if notes == nil {
 		t.Fatalf("expected notes, got nil")
+	}
+	if repo.gotUserID != 7 {
+		t.Errorf("expected userID 7, got %d", repo.gotUserID)
 	}
 	if repo.gotPage != 2 {
 		t.Errorf("expected page 2, got %d", repo.gotPage)
