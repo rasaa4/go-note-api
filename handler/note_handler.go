@@ -29,7 +29,14 @@ func (h *NoteHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ctx := r.Context()
-	note, err := h.service.CreateNote(ctx, req.Title, req.Content)
+
+	userID, ok := ctx.Value("userID").(int)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	note, err := h.service.CreateNote(ctx, userID, req.Title, req.Content)
 	if err != nil {
 
 		handleError(w, err)

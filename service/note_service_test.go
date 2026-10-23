@@ -60,7 +60,7 @@ func TestCreateNote(t *testing.T) {
 
 	repo := &mockNoteRepo{}
 	service := NewNoteService(repo)
-	note, err := service.CreateNote(context.Background(), "My Note", "Hello i'm testing")
+	note, err := service.CreateNote(context.Background(), 1, "My Note", "Hello i'm testing")
 
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
@@ -77,12 +77,15 @@ func TestCreateNote(t *testing.T) {
 	if note.ID != 1 {
 		t.Errorf("expected ID 1, got %d", note.ID)
 	}
+	if note.UserID != 1 {
+		t.Errorf("expected UserID 1, got %d", note.UserID)
+	}
 }
 
 func TestCreateNote_TitleRequired(t *testing.T) {
 	repo := &mockNoteRepo{}
 	service := NewNoteService(repo)
-	note, err := service.CreateNote(context.Background(), " ", "Hello")
+	note, err := service.CreateNote(context.Background(), 1, " ", "Hello")
 
 	if !errors.Is(err, ErrTitleRequired) {
 		t.Fatalf("expected ErrTitleRequired, got %v", err)
@@ -97,7 +100,7 @@ func TestCreateNote_ContentRequired(t *testing.T) {
 
 	repo := &mockNoteRepo{}
 	service := NewNoteService(repo)
-	note, err := service.CreateNote(context.Background(), "Mynote", " ")
+	note, err := service.CreateNote(context.Background(), 1, "Mynote", " ")
 	if !errors.Is(err, ErrContentRequired) {
 		t.Fatalf("expected ErrContentRequired, got %v", err)
 	}

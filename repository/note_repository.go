@@ -26,9 +26,9 @@ func NewmysqlNoteRepository(db *sql.DB) NoteRepo {
 }
 
 func (r *mysqlNoteRepository) Create(ctx context.Context, note *entity.Note) error {
-	query := "INSERT INTO notes (title, content, created_at) VALUES (?, ?, ?)"
+	query := "INSERT INTO notes (user_id, title, content, created_at) VALUES (?, ?, ?, ?)"
 
-	result, err := r.db.ExecContext(ctx, query, note.Title, note.Content, note.CreatedAt)
+	result, err := r.db.ExecContext(ctx, query, note.UserID, note.Title, note.Content, note.CreatedAt)
 	if err != nil {
 		return err
 	}

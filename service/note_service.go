@@ -27,7 +27,7 @@ func NewNoteService(repo repository.NoteRepo) *NoteService {
 	return &NoteService{repo: repo}
 }
 
-func (s *NoteService) CreateNote(ctx context.Context, title, content string) (*entity.Note, error) {
+func (s *NoteService) CreateNote(ctx context.Context, userID int, title, content string) (*entity.Note, error) {
 	if strings.TrimSpace(title) == "" {
 		return nil, ErrTitleRequired
 	}
@@ -35,6 +35,7 @@ func (s *NoteService) CreateNote(ctx context.Context, title, content string) (*e
 		return nil, ErrContentRequired
 	}
 	var note entity.Note
+	note.UserID = userID
 	note.Title = title
 	note.Content = content
 	note.CreatedAt = time.Now()
