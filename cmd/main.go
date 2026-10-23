@@ -65,26 +65,36 @@ func main() {
 	protectedNotes := handler.JWTMiddleware(notesHandler)
 	mux.Handle("/notes", protectedNotes)
 
-	mux.HandleFunc("/notes/get", func(w http.ResponseWriter, r *http.Request) {
+	getFunc := func(w http.ResponseWriter, r *http.Request) {
 		noteHandler.GetByID(w, r)
-	})
-	mux.HandleFunc("/notes/update", func(w http.ResponseWriter, r *http.Request) {
+	}
+	getHandler := http.HandlerFunc(getFunc)
+	protectedGet := handler.JWTMiddleware(getHandler)
+	mux.Handle("/notes/get", protectedGet)
+
+	updateFunc := func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPut {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
 
 		noteHandler.Update(w, r)
-	})
+	}
+	updateHandler := http.HandlerFunc(updateFunc)
+	protectedUpdate := handler.JWTMiddleware(updateHandler)
+	mux.Handle("/notes/update", protectedUpdate)
 
-	mux.HandleFunc("/notes/delete", func(w http.ResponseWriter, r *http.Request) {
+	deleteFunc := func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodDelete {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
 
 		noteHandler.DeleteByID(w, r)
-	})
+	}
+	deleteHandler := http.HandlerFunc(deleteFunc)
+	protectedDelete := handler.JWTMiddleware(deleteHandler)
+	mux.Handle("/notes/delete", protectedDelete)
 
 	mux.HandleFunc("/register", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
@@ -92,7 +102,6 @@ func main() {
 			return
 		}
 		authHandler.Register(w, r)
-
 	})
 	mux.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
@@ -100,7 +109,6 @@ func main() {
 			return
 		}
 		authHandler.Login(w, r)
-
 	})
 
 	log.Println("server starting on :8080")
