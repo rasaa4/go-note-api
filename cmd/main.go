@@ -51,7 +51,7 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/notes", func(w http.ResponseWriter, r *http.Request) {
+	notesFunc := func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPost:
 			noteHandler.Create(w, r)
@@ -60,7 +60,10 @@ func main() {
 		default:
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		}
-	})
+	}
+	notesHandler := http.HandlerFunc(notesFunc)
+	protectedNotes := handler.JWTMiddleware(notesHandler)
+	mux.Handle("/notes", protectedNotes)
 
 	mux.HandleFunc("/notes/get", func(w http.ResponseWriter, r *http.Request) {
 		noteHandler.GetByID(w, r)
